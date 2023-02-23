@@ -1,7 +1,11 @@
-// original code from Shogo's ddc
-// https://github.com/Shougo/ddc.vim/blob/1b0fee86c5/denops/ddc/util.ts
 import { assertEquals } from "./deps.ts";
 
+// according to ChatGPT
+export const hasJapanese = (text: string) =>
+  RegExp("[^\u0000-\u007F]").test(text);
+
+// original code from Shogo's ddc
+// https://github.com/Shougo/ddc.vim/blob/1b0fee86c5/denops/ddc/util.ts
 export function vimoption2ts(option: string): string {
   let hasDash = false;
   const patterns: string[] = [];
