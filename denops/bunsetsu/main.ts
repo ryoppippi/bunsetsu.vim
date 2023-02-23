@@ -1,40 +1,43 @@
 import type { Denops } from "./deps.ts";
-// import type { BunsetusOptions } from "./types.ts";
+import { BunsetusOptions } from "./types.ts";
 import { Tokenizer } from "./tokenizer.ts";
 import { fn, op, un } from "./deps.ts";
-import { hasJapanese, vimoption2ts } from "./utils.ts";
 
-export function main(denops: Denops): void {
+const getIsKeyword = async (denops: Denops): Promise<string> =>
+  await op.iskeyword.getLocal(denops);
+
+const tokenize = async (
+  text: unknown,
+  isKeyword: unknown = "",
+  options: unknown = {},
+): Promise<string[]> => {
+  const tokenizer = new Tokenizer(BunsetusOptions.parse(options));
+  un.assertString(text);
+  un.assertString(isKeyword);
+  const segs = await tokenizer.tokenize(text, isKeyword);
+  return segs;
+};
+
+const bunsetsu = async (
+  denops: Denops,
+  options: unknown = {},
+): Promise<string[]> => {
+  const isKeyword = await getIsKeyword(denops);
+  const line = await fn.getline(denops, ".");
+  const segs = await tokenize(line, isKeyword);
+  return segs;
+};
+
+export function main(denops: Denops) {
   denops.dispatcher = {
-    async bunkatsu(options: unknown = {}): Promise<string[]> {
-      const tokenizer = new Tokenizer();
-      const isKeyword = vimoption2ts(await op.iskeyword.getLocal(denops));
-      const isKeywordRegexp = new RegExp(
-        `([${isKeyword}]+|[^${isKeyword}]+)`,
-        "g",
-      );
-      const line = await fn.getline(denops, ".");
-      un.assertString(line);
-      const segs = (
-        await Promise.all(
-          line
-            .split(/[\s　]+/)
-            .map((text) =>
-              hasJapanese(text)
-                ? tokenizer.tokenize(text)
-                : (text.match(isKeywordRegexp) ?? "")
-            ),
-        )
-      )
-        .flat()
-        .filter((e) => !!e.trim().length);
-      return segs;
+    async tokenize(
+      text: unknown,
+      isKeyword: unknown = "",
+      options: unknown = {},
+    ): Promise<string[]> {
+      un.ensureString(text);
+      un.ensureString(isKeyword);
+      return await tokenize(text, isKeyword, options);
     },
   };
 }
-
-const getIsKeyword = async (denops: Denops) => {
-  const iskeyword = await op.iskeyword.getLocal(denops);
-  if (!iskeyword) return "";
-  return vimoption2ts(iskeyword);
-};
