@@ -1,4 +1,4 @@
-function! bunsetsu#tokenize(text, isKeyword) abort
+function! bunsetsu#tokenize(text, isKeyword,...) abort
   if denops#plugin#wait('bunsetsu') isnot# 0
     return ''
   endif
